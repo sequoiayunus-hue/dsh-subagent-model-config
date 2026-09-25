@@ -1,0 +1,7 @@
+# dsh-subagent-model-config bundle patch
+#
+# 一行 Host 半边入口。客户端半边由 package.json 的 dsh.client 段声明，
+# Loader 据 package.json 送 ./client 给浏览器模块表，不在本文件里出现。
+- insert:
+    - id: subagent-model-config
+      name: 'dsh-subagent-model-config'
