@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "debug": false,
+  "rules": [
+    {
+      "match": "verifier*"
+    },
+    {
+      "match": "reviewer*"
+    },
+    {
+      "match": "researcher*"
+    },
+    {
+      "match": "implementer*"
+    },
+    {
+      "match": "tester*"
+    }
+  ]
+}

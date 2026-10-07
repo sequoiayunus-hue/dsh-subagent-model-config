@@ -1,12 +1,16 @@
 {
   "name": "dsh-subagent-model-config",
-  "version": "0.1.0",
-  "description": "Configure per-teammate model & reasoning effort for DeepSeek Harness native agent teams, with a settings UI. 为 DSH 原生 Team 编队队员可视化配置模型与推理档位。",
+  "version": "0.2.1",
+  "description": "Configure per-teammate model & reasoning effort for DeepSeek Harness native agent teams, with a settings UI; video-crew teammate names are hard-gated (spawn refused unless a rule matches). 为 DSH 原生编队队员（Team teammate）可视化配置模型与推理档位；视频队员名硬闸门（未命中规则即拒绝启动）。",
   "type": "module",
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js"
   },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
@@ -21,7 +25,7 @@
   },
   "engines": {
     "node": ">=22.0.0",
-    "dsh": ">=0.1.7-alpha.1 <0.2.0-0"
+    "dsh": ">=0.1.7-alpha.1"
   },
   "scripts": {
     "test": "node --test"
