@@ -73,12 +73,12 @@ DSH 原生 Team 编队的 `spawn_teammate` 只有 name / description / prompt / 
 
 ### 工作原理
 
-插件在运行时包装两个 DSH 内部接口：`agentTeams.spawnTeammate`（采集队员名）与 `SubagentRuntime.startContinuable`（注入点）。派单发生时按队员名匹配规则表，把命中的 provider / model / reasoningEffort 写进官方原生支持的 `SubagentStartRequest.agentOptions`——只接上编队路径没接的线，不改任何官方行为。包装装在实例与原型两层（幂等防重入），内部异常一律只记录不抛出；配置为空或关闭时，行为与未装本插件完全一致。
+插件在运行时包装两个 DSH 内部接口：`agentTeams.spawnTeammate`（采集队员名）与 `SubagentRuntime.<seam>`（注入点；`<seam>` 随 DSH 版本改名 —— ≤0.2.0 叫 `startContinuable`，0.2.1 起叫 `startActivation`，插件按存在性自适应挑选，两个版本都能挂上；只认老名字会在新版上静默失效）。派单发生时按队员名匹配规则表，把命中的 provider / model / reasoningEffort 写进官方原生支持的 `SubagentStartRequest.agentOptions`——只接上编队路径没接的线，不改任何官方行为。包装装在实例与原型两层（幂等防重入），内部异常一律只记录不抛出；配置为空或关闭时，行为与未装本插件完全一致。
 
 ### 兼容性与测试
 
 - **声明范围**：`engines.dsh >= 0.1.7-alpha.1`，Node >= 22
-- **实测**：DSH 0.1.7-alpha.2（首发实测）；DSH 0.2.0 桌面端（日常在用）
+- **实测**：DSH 0.1.7-alpha.2（首发实测）；DSH 0.2.0 桌面端（日常在用）；DSH 0.2.1-rc.2（nightly，注入点已改名 `startActivation`）
 - `npm test`：143 用例（17 套件）全过
 - 本插件钩在 DSH 内部运行时接口上，官方未来版本可能改变这些接口导致失效；遇到问题欢迎提 issue
 
@@ -121,12 +121,12 @@ Configure: Settings → **Subagent Models** — add rules with a name pattern, o
 
 ### How it works
 
-The plugin wraps two DSH internals at runtime: `agentTeams.spawnTeammate` (captures the teammate name) and `SubagentRuntime.startContinuable` (injection point). On spawn it matches the name against the rule table and writes the resolved fields into `SubagentStartRequest.agentOptions` — a field DSH natively supports but the team path never wired up. Wraps are installed on both instance and prototype (idempotent); internal errors are logged, never thrown; with an empty or disabled config the behavior is identical to not having the plugin.
+The plugin wraps two DSH internals at runtime: `agentTeams.spawnTeammate` (captures the teammate name) and `SubagentRuntime.<seam>` (injection point; `<seam>` was renamed across DSH releases — `startContinuable` up to 0.2.0, `startActivation` from 0.2.1 — and the plugin picks whichever exists, so a hardcoded old name no longer silently disables every rule). On spawn it matches the name against the rule table and writes the resolved fields into `SubagentStartRequest.agentOptions` — a field DSH natively supports but the team path never wired up. Wraps are installed on both instance and prototype (idempotent); internal errors are logged, never thrown; with an empty or disabled config the behavior is identical to not having the plugin.
 
 ### Compatibility & tests
 
 - `engines.dsh >= 0.1.7-alpha.1`, Node >= 22
-- Tested on DSH 0.1.7-alpha.2 and the 0.2.0 desktop app (daily driver)
+- Tested on DSH 0.1.7-alpha.2, the 0.2.0 desktop app (daily driver), and the 0.2.1-rc.2 nightly (injection point = `startActivation`)
 - `npm test`: 143 cases, 17 suites, all passing
 - The plugin hooks DSH internal runtime APIs that may change in future releases — please open an issue if it breaks
 

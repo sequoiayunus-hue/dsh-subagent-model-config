@@ -1,7 +1,7 @@
 {
   "name": "dsh-subagent-model-config",
   "version": "0.3.1",
-  "description": "可视化配置编队队员（Team teammate）的模型与推理档位 + 视频预设下的队员侧能力限制：运行时包装 subagents.startContinuable + agentTeams.spawnTeammate，不改官方任何文件、可逆、可一键关闭；对视频队员名加硬闸门（未命中规则即拒绝启动，执行模型必须人工点名可控）；当父会话 preset 为 video 时，对子代理注入 persona（遮蔽主窗身份卡）与 toolFilter.allow（视频解析工具白名单，fail-closed；团队通信工具在 own 层天然保留）。",
+  "description": "可视化配置编队队员（Team teammate）的模型与推理档位 + 视频预设下的队员侧能力限制：运行时包装 subagents.<seam>（startActivation / startContinuable 按存在性自适应）+ agentTeams.spawnTeammate，不改官方任何文件、可逆、可一键关闭；对视频队员名加硬闸门（未命中规则即拒绝启动，执行模型必须人工点名可控）；当父会话 preset 为 video 时，对子代理注入 persona（遮蔽主窗身份卡）与 toolFilter.allow（视频解析工具白名单，fail-closed；团队通信工具在 own 层天然保留）。",
   "private": true,
   "type": "module",
   "exports": {
