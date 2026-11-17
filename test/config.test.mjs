@@ -23,6 +23,7 @@ import {
   normalizeConfig,
   resolveRule,
   ruleToAgentOptions,
+  ruleToAgentPreset,
 } from '../lib/config.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -826,5 +827,35 @@ describe('note 字段 — 持久化保留与注入隔离', () => {
     const config = loadConfig(file);
     assert.deepEqual(config.rules, [{ match: 'verifier*', model: 'glm-5-3-flash', note: '独立验证员' }]);
     assert.deepEqual(ruleToAgentOptions(resolveRule(config, 'verifier-1')), { model: 'glm-5-3-flash' });
+  });
+});
+
+describe('agentPreset（0.2.1-rc.5 新增支持的规则字段）', () => {
+  it('ruleToAgentPreset 取到预设 id', () => {
+    const config = normalizeConfig({ rules: [{ match: '*', agentPreset: 'ptc', model: 'glm-5-3-flash' }] });
+    const rule = resolveRule(config, 'any-teammate');
+    assert.equal(ruleToAgentPreset(rule), 'ptc');
+  });
+
+  it('agentPreset 绝不进 agentOptions（官方 schema 严格，未知键会拒收）', () => {
+    const config = normalizeConfig({ rules: [{ match: '*', agentPreset: 'ptc', model: 'glm-5-3-flash' }] });
+    const rule = resolveRule(config, 'any-teammate');
+    assert.deepEqual(ruleToAgentOptions(rule), { model: 'glm-5-3-flash' });
+  });
+
+  it('没有 agentPreset 的规则返回 null', () => {
+    const config = normalizeConfig({ rules: [{ match: '*', model: 'glm-5-3-flash' }] });
+    assert.equal(ruleToAgentPreset(resolveRule(config, 'x')), null);
+  });
+
+  it('loadConfig 保留 agentPreset（不被 cleanRule 过滤掉）', () => {
+    const file = fixtureFile(
+      'agent-preset-roundtrip',
+      'config.json',
+      JSON.stringify({ enabled: true, rules: [{ match: 'reviewer*', agentPreset: 'ptc' }] }),
+    );
+    const config = loadConfig(file);
+    assert.deepEqual(config.rules, [{ match: 'reviewer*', agentPreset: 'ptc' }]);
+    assert.equal(ruleToAgentPreset(resolveRule(config, 'reviewer-1')), 'ptc');
   });
 });

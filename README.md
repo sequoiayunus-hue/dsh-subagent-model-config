@@ -62,6 +62,7 @@ DSH 原生 Team 编队的 `spawn_teammate` 只有 name / description / prompt / 
   "rules": [
     { "match": "verifier*",   "note": "独立验证员——便宜快的", "provider": "…", "model": "…", "reasoningEffort": "low" },
     { "match": "writer*",     "note": "写手——强模型高思考",   "provider": "…", "model": "…", "reasoningEffort": "high" },
+    { "match": "reviewer*",   "note": "审查员——用 ptc 预设的完整工具面", "agentPreset": "ptc" },
     { "match": "researcher*", "note": "检索员——角色先建，模型后补" }
   ]
 }
@@ -73,7 +74,7 @@ DSH 原生 Team 编队的 `spawn_teammate` 只有 name / description / prompt / 
 
 ### 工作原理
 
-插件在运行时包装两个 DSH 内部接口：`agentTeams.spawnTeammate`（采集队员名）与 `SubagentRuntime.startContinuable`（注入点）。派单发生时按队员名匹配规则表，把命中的 provider / model / reasoningEffort 写进官方原生支持的 `SubagentStartRequest.agentOptions`——只接上编队路径没接的线，不改任何官方行为。包装装在实例与原型两层（幂等防重入），内部异常一律只记录不抛出；配置为空或关闭时，行为与未装本插件完全一致。
+插件在运行时包装两个 DSH 内部接口：`agentTeams.spawnTeammate`（采集队员名）与子代理的**可继续启动入口**（注入点）——该入口在 DSH ≤ 0.2.1-rc.4 叫 `startContinuable`、≥ 0.2.1-rc.5 叫 `startActivation`，插件按可用性自动解析，两代都支持。派单发生时按队员名匹配规则表，把命中的 provider / model / reasoningEffort 写进官方原生支持的 `SubagentStartRequest.agentOptions`；`agentPreset` 写进同级的 `request.agentPreset`（它不属于 `AgentOptions`，混进去会被官方 schema 拒收）。只接上编队路径没接的线，不改任何官方行为。
 
 ### 兼容性与测试
 
@@ -110,6 +111,7 @@ This plugin fills that gap: name-based rules, each teammate runs on the provider
 - **Zero official changes**: no official files modified; the wrap is reversible — untick "enabled" and you are back to stock behavior
 - **Hot reload**: saved rules apply to the next `spawn_teammate`, no restart needed
 - **One rule table decides who runs on what**: glob matching (`*` / `?`, case-insensitive), first match wins; per-rule display notes
+- **Per-rule agent preset**: add `"agentPreset": "ptc"` to run that teammate on a different DSH preset (tool surface + system prompt), independently of provider / model
 - **Safe "model pending" rules**: a rule with an empty model injects nothing (teammate inherits the default); the UI flags it in amber — create roles first, fill models later
 - **Evidence switch**: with `debug: true` each spawn appends a line to `.probe.jsonl`; off by default
 
@@ -121,12 +123,12 @@ Configure: Settings → **Subagent Models** — add rules with a name pattern, o
 
 ### How it works
 
-The plugin wraps two DSH internals at runtime: `agentTeams.spawnTeammate` (captures the teammate name) and `SubagentRuntime.startContinuable` (injection point). On spawn it matches the name against the rule table and writes the resolved fields into `SubagentStartRequest.agentOptions` — a field DSH natively supports but the team path never wired up. Wraps are installed on both instance and prototype (idempotent); internal errors are logged, never thrown; with an empty or disabled config the behavior is identical to not having the plugin.
+The plugin wraps two DSH internals at runtime: `agentTeams.spawnTeammate` (captures the teammate name) and the continuable-start entry point (injection point) — named `startContinuable` up to DSH 0.2.1-rc.4 and `startActivation` from 0.2.1-rc.5, resolved at load so both generations work. On spawn it matches the name against the rule table and writes the resolved fields into `SubagentStartRequest.agentOptions`; `agentPreset` goes to the sibling `request.agentPreset`, because it is not an `AgentOptions` field and an unknown key there is rejected by the official schema.
 
 ### Compatibility & tests
 
 - `engines.dsh >= 0.1.7-alpha.1`, Node >= 22
-- Tested on DSH 0.1.7-alpha.2 and the 0.2.0 desktop app (daily driver)
+- Tested on DSH 0.1.7-alpha.2, 0.2.0 desktop and 0.2.1-rc.5 (where the continuable-start method is `startActivation`)
 - `npm test`: 143 cases, 17 suites, all passing
 - The plugin hooks DSH internal runtime APIs that may change in future releases — please open an issue if it breaks
 
